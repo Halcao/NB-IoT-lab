@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+	<style type="text/css">
+		body, html{width: 100%;height: 100%;margin:0;font-family:"微软雅黑";}
+		#map_container{height:500px;width:100%;}
+		#r-result{width:100%;}
+    </style>
+	<script type="text/javascript" src="http://api.map.baidu.com/api?ak=ZUONbpqGBsYGXNIYHicvbAbM&type=all&v=2.0"></script>
+  	<script src="https://unpkg.com/gcoord/dist/gcoord.js"></script>
+	<title>Route trace</title>
+</head>
+<body>
+	<div id="map_container"></div>
+	<div id="r-result">
+		<input type="button" onclick="addOverlay();" value="添加覆盖物" />
+		<input type="button" onclick="removeOverlay();" value="删除覆盖物" />
+		<input type="file" id="json-file" name="test">
+	</div>
+</body>
+</html>
+<script type="text/javascript">
+	// 百度地图API功能
+    var map = new BMap.Map("map_container");
+    // map.addControl(new BMap.ZoomControl());
+	var fileInput = document.getElementById('json-file');
+	fileInput.addEventListener('change', function () {
+		// 清除markers:
+		removeOverlay();
+		// 检查文件是否选择:
+		if (!fileInput.value) {
+			alert('没有选择文件');
+			return;
+		}
+		// 获取File引用:
+		var file = fileInput.files[0];
+			// 读取文件:
+		var reader = new FileReader();
+		reader.onload = function(e) {
+			var data = e.target.result;
+			var records = JSON.parse(data).RECORDS;
+			addOverlay(records);
+		};
+		reader.readAsText(file);
+	});
+	map.centerAndZoom(new BMap.Point(116.31660167, 40.00793833), 15);
+    //启用滚轮放大缩小
+    map.enableScrollWheelZoom();
+
+	//添加覆盖物
+	function addOverlay(records) {
+		// time ascending
+		var center = {x: 0, y: 0};
+        records = records.sort((a, b) => a.bs_time - b.bs_time).filter(e => e.GPS_x > "0" && e.GPS_y > "0");
+        
+        var options = {
+            size: BMAP_POINT_SIZE_SMALL,
+            shape: BMAP_POINT_SHAPE_CIRCLE,
+            color: '#ff0000'
+        }
+
+        var size = 10;
+
+        var tid = setInterval(() => {
+            if (records.length > 0) {
+                var array = records.splice(0, size);
+                var collection = new BMap.PointCollection(array.map(e => {
+                    var result = gcoord.transform(
+                        [ parseFloat(e.GPS_x), parseFloat(e.GPS_y) ],    // 经纬度坐标
+                        gcoord.WGS84,                 // 当前坐标系
+                        gcoord.BD09                   // 目标坐标系
+                    );
+                    return new BMap.Point(result[0], result[1]);
+                }), options);
+                map.addOverlay(collection);
+            } else {
+                clearInterval(tid);
+                return;
+            }
+        }, 200);
+	}
+	//清除覆盖物
+	function removeOverlay() {
+		map.clearOverlays();
+	}
+</script>
