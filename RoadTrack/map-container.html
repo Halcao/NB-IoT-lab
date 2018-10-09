@@ -74,6 +74,9 @@
                     );
                     return new BMap.Point(result[0], result[1]);
                 }), options);
+				collection.addEventListener('click', function (e) {
+					openInfo(JSON.stringify(array[0]), e);
+				});
                 map.addOverlay(collection);
             } else {
                 clearInterval(tid);
@@ -84,5 +87,18 @@
 	//清除覆盖物
 	function removeOverlay() {
 		map.clearOverlays();
+	}
+
+	var opts = {
+			width: 320,     // 信息窗口宽度
+			height: 180,     // 信息窗口高度
+			enableMessage: true//设置允许信息窗发送短息
+		};
+	function openInfo(content, e){
+		var p = e.target;
+		var point = new BMap.Point(p.map.Oe.lng, p.map.Oe.lat);
+		// var point = new BMap.Point(p.getPosition().lng, p.getPosition().lat);
+		var infoWindow = new BMap.InfoWindow("<p style='font-size: 5px; word-break: break-all;'>" + content + "</p>", opts);  // 创建信息窗口对象 
+		map.openInfoWindow(infoWindow, point); //开启信息窗口
 	}
 </script>
