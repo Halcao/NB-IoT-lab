@@ -1,10 +1,11 @@
+import graphviz
+import json
+import datetime
 import pandas as pd
 import numpy as np
-import graphviz
 from sklearn.tree import DecisionTreeRegressor
 from sklearn import tree
 import pandas as pd
-import json
 from sklearn.ensemble import RandomForestRegressor
 
 path = "/Users/Halcao/Desktop/NB_IoT.csv"
@@ -13,10 +14,12 @@ path = "/Users/Halcao/Desktop/NB_IoT.csv"
 with open(path) as f:
     data = pd.read_csv(f)
 
-features = ['areacode', 'cellid', 'tx_power', 'cell_id1', 'rssi1']
-predict = ['GPS_x', 'GPS_y']
+data['weekday'], data['hour'] = data['bs_time'].apply(lambda x: pd.Series([datetime.datetime(int('20'+str(x)[0:2]), int(str(x)[2:4]), int(str(x)[4:6])).weekday(), str(x)[6:8]]))
+
+features = ['GPS_x', 'GPS_y', 'weekday', 'hour', 'cellid', 'rssi1', 'earfcn']
+prediction = ['rsrp1']
 X = np.array(data[features])  # Create an array
-y = np.array(data[predict])
+y = np.array(data[prediction])
 
 # regt = DecisionTreeRegressor(max_depth=4)
 
@@ -29,4 +32,4 @@ y = np.array(data[predict])
 # graph.render("tree")  # Save the source to file
 rfr = RandomForestRegressor()
 rfr.fit(X, y)
-print(rfr.predict([X[100]]))
+# print(rfr.predict([X[100]]))
